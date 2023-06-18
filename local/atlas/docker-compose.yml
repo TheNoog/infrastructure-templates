@@ -1,0 +1,24 @@
+version: '3.3'
+
+networks:
+  esnet:
+    driver: bridge
+
+services:
+  atlas:
+    build:
+      context: ./docker/atlas
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_ID}_atlas
+    ports:
+      - 21000:21000
+    environment:
+      - ATLAS_PROVISION_EXAMPLES=true
+    volumes:
+      - ./data/atlas:/data/atlas
+    restart: always
+    command: /opt/apache-atlas-2.1.0/bin/atlas_start.py
+
+volumes:
+  data:
+    driver: local

@@ -1,0 +1,48 @@
+version: '3.7'
+
+networks:
+  local-network:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.20.0.0/16
+
+
+services:
+
+  cockroachdb_node_1:
+    container_name: cockroachdb_node_1
+    image: cockroachdb/cockroach:latest
+    # volumes:
+    #    - ./data/node_1:/cockroach/cockroach-data
+    command: start-single-node --insecure
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    networks:
+      local-network:
+        aliases:
+          - node_1
+
+  cockroachdb_node_2:
+    container_name: cockroachdb_node_2
+    image: cockroachdb/cockroach:latest
+    # volumes:
+    #    - ./data/node_2:/cockroach/cockroach-data
+    command: start --insecure --join=node_1
+    networks:
+      local-network:
+        aliases:
+         - node_2
+
+
+  cockroachdb_node_3:
+    container_name: cockroachdb_node_3
+    image: cockroachdb/cockroach:latest
+    # volumes:
+    #    - ./data/node_3:/cockroach/cockroach-data
+    command: start --insecure --join=node_1
+    networks:
+      local-network:
+        aliases:
+         - node_3

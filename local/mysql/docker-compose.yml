@@ -1,0 +1,38 @@
+version: '3.7'
+
+networks:
+  local-network:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.20.0.0/16
+
+
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: test
+      MYSQL_DATABASE: test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+    ports:
+      - 3306:3306
+    networks:
+      - local-network
+
+  mysql-adminer:
+    container_name: mysql-adminer
+    image: adminer:4.8.0
+    restart: always
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    ports:
+      - 8100:8080
+    links:
+      - mysql
+    networks:
+      - local-network

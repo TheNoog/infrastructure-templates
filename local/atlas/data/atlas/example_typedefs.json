@@ -1,0 +1,64 @@
+{
+    "entityDefs" : [
+      {
+        "superTypes" : [ "Process" ],
+        "category" : "ENTITY",
+        "name": "rdbms_view",
+        "description": "a type definition for a rdbms view",
+        "attributeDefs" : []
+      },
+      {
+        "superTypes" : [ "Process" ],
+        "category" : "ENTITY",
+        "name": "rdbms_sp",
+        "description": "a type definition for a rdbms stored procedure",
+        "attributeDefs" : []
+      }
+    ],
+    "relationshipDefs": [
+      {
+        "name": "rdbms_db_views",
+        "serviceType": "rdbms",
+        "typeVersion": "1.2",
+        "relationshipCategory": "COMPOSITION",
+        "relationshipLabel":    "__rdbms_db.views",
+        "endDef1": {
+            "type": "rdbms_db",
+            "name": "views",
+            "isContainer": true,
+            "cardinality": "SET",
+            "isLegacyAttribute": true
+        },
+        "endDef2": {
+            "type": "rdbms_view",
+            "name": "db",
+            "isContainer": false,
+            "cardinality": "SINGLE",
+            "isLegacyAttribute": true
+        },
+        "propagateTags": "NONE"
+      },
+      {
+        "name": "rdbms_db_sps",
+        "serviceType": "rdbms",
+        "typeVersion": "1.2",
+        "relationshipCategory": "COMPOSITION",
+        "relationshipLabel":    "__rdbms_db.stored_procedures",
+        "endDef1": {
+            "type": "rdbms_db",
+            "name": "stored_procedures",
+            "isContainer": true,
+            "cardinality": "SET",
+            "isLegacyAttribute": true
+        },
+        "endDef2": {
+            "type": "rdbms_sp",
+            "name": "db",
+            "isContainer": false,
+            "cardinality": "SINGLE",
+            "isLegacyAttribute": true
+        },
+        "propagateTags": "NONE"
+      }
+    ]
+}

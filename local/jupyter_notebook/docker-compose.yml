@@ -1,0 +1,20 @@
+version: '3.7'
+
+networks:
+  local-network:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.20.0.0/16
+
+services:
+  jupyter:
+    container_name: jupyter
+    image: jupyter/pyspark-notebook:latest
+    ports:
+      - 8888:8888
+    command: start.sh jupyter notebook --NotebookApp.token=''
+    volumes:
+    - ./test:/home/jovyan/work
+    networks:
+      - local-network

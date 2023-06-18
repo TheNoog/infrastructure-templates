@@ -1,0 +1,25 @@
+version: '3.7'
+
+networks:
+  local-network:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.20.0.0/16
+
+services:
+  # connect with Robot 3T
+  mongodb:
+    container_name: mongodb
+    image: mongo:5.0.8
+    # environment:
+    #     MONGO_INITDB_ROOT_USERNAME: admin
+    #     MONGO_INITDB_ROOT_PASSWORD: admin
+    #     MONGO_INITDB_DATABASE: movies-api-db
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./movies.json:/docker-entrypoint-initdb.d/movies.json
+    ports:
+      - 27017:27017
+    networks:
+      - local-network

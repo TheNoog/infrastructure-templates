@@ -1,0 +1,28 @@
+version: '3.7'
+
+networks:
+  local-network:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.20.0.0/16
+
+services:
+# https://hub.docker.com/r/tinkerpop/gremlin-console
+# https://tinkerpop.apache.org/docs/current/tutorials/the-gremlin-console/
+  tinkerpop-gremlin-console:
+    container_name: tinkerpop-gremlin-console
+    image: tinkerpop/gremlin-console:3.4
+    networks:
+      - local-network
+    links:
+      - tinkerpop-gremlin-server
+
+# https://hub.docker.com/r/tinkerpop/gremlin-server
+  tinkerpop-gremlin-server:
+    container_name: tinkerpop-gremlin-server
+    image: tinkerpop/gremlin-server:3.4
+    ports:
+     - "8182:8182"
+    networks:
+      - local-network

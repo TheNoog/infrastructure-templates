@@ -1,0 +1,119 @@
+version: '3.7'
+
+networks:
+  local-network:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.20.0.0/16
+
+
+services:
+  spark-master:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: spark-master
+    hostname: master
+    environment:
+      MASTER: spark://localhost:7077
+      SPARK_WORKER_PORT: 8881
+      SPARK_PUBLIC_DNS: localhost
+    expose:
+      - 7077
+      - 6066
+      - 4040
+      - 8889
+      - 8080
+    ports:
+      - 4040:4040
+      - 6066:6066  # Master rest port
+      - 7077:7077
+      - 8080:8080  # Master dashboard
+      - 8888:8888  # Jupyter Notebook
+      - 8889:8889  # Jupyter Notebook
+      - 8890:8890
+    command: bash -c "/opt/spark/sbin/start-master.sh"
+    # volumes:
+    #   - ../../code:/code
+    #   - ../../data:/data
+    networks:
+      - local-network
+
+  spark-worker-1:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: spark-worker-1
+    hostname: worker
+    environment:
+      SPARK_PUBLIC_DNS: localhost
+      SPARK_MASTER_PORT: 7077
+      SPARK_WORKER_PORT: 8881
+      SPARK_WORKER_WEBUI_PORT: 8081
+      SPARK_WORKER_CORES: 1
+      SPARK_WORKER_MEMORY: 1g
+    links:
+      - spark-master
+    expose:
+      - 8881
+    ports:
+      - 8081:8081
+    command: bash -c "/opt/spark/sbin/start-worker.sh spark://master:7077"
+    # volumes:
+    #   - ../../code:/code
+    #   - ../../data:/data
+    networks:
+      - local-network
+
+  spark-worker-2:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: spark-worker-2
+    hostname: worker
+    environment:
+      SPARK_PUBLIC_DNS: localhost
+      SPARK_MASTER_PORT: 7077
+      SPARK_WORKER_PORT: 8881
+      SPARK_WORKER_WEBUI_PORT: 8082
+      SPARK_WORKER_CORES: 1
+      SPARK_WORKER_MEMORY: 1g
+    links:
+      - spark-master
+    expose:
+      - 8881
+    ports:
+      - 8082:8082
+    command: bash -c "/opt/spark/sbin/start-worker.sh spark://master:7077"
+    # volumes:
+    #   - ../../code:/code
+    #   - ../../data:/data
+    networks:
+      - local-network
+
+  spark-worker-3:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: spark-worker-3
+    hostname: worker
+    environment:
+      SPARK_PUBLIC_DNS: localhost
+      SPARK_MASTER_PORT: 7077
+      SPARK_WORKER_PORT: 8881
+      SPARK_WORKER_WEBUI_PORT: 8083
+      SPARK_WORKER_CORES: 1
+      SPARK_WORKER_MEMORY: 1g
+    links:
+      - spark-master
+    expose:
+      - 8881
+    ports:
+      - 8083:8083
+    command: bash -c "/opt/spark/sbin/start-worker.sh spark://master:7077"
+    # volumes:
+    #   - ../../code:/code
+    #   - ../../data:/data
+    networks:
+      - local-network

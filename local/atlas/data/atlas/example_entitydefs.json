@@ -1,0 +1,86 @@
+{
+    "entities": [
+        {
+            "guid": -100,
+            "typeName": "rdbms_instance",
+            "attributes": {
+                "qualifiedName": "server_name",
+                "name": "server_name",
+                "rdbms_type": "MSSQL",
+                "hostname": "test_server",
+                "comment": "Just some test server"
+            }
+        },
+        {
+            "guid": -200,
+            "typeName": "rdbms_db",
+            "attributes": {
+                "qualifiedName": "db_name@server_name",
+                "name": "db_name",
+                "comment": "Just some test db",
+                "instance": {
+                    "guid": -100
+                }
+            }
+        },
+        {
+            "guid": -1,
+            "typeName": "rdbms_table",
+            "attributes": {
+                "qualifiedName": "db_name.table_in@server_name",
+                "name": "table_in",
+                "db": {
+                    "guid": -200
+                }
+            }
+        },
+        {
+            "guid": -2,
+            "typeName": "rdbms_table",
+            "attributes": {
+                "qualifiedName": "db_name.table_out@server_name",
+                "name": "table_out",
+                "db": {
+                    "guid": -200
+                }
+            }
+        },
+        {
+            "guid": -3,
+            "typeName": "rdbms_sp",
+            "attributes": {
+                "qualifiedName": "db_name.sp_name@server_name",
+                "name": "sp_name",
+                "inputs": [
+                    {
+                        "guid": -1
+                    }
+                ],
+                "outputs": [
+                    {
+                        "guid": -2
+                    }
+                ],
+                "db": {
+                    "guid": -200
+                }
+            }
+        },
+        {
+            "guid": -4,
+            "typeName": "rdbms_view",
+            "attributes": {
+                "qualifiedName": "db_name.view_name@server_name",
+                "name": "view_name",
+                "inputs": [
+                    {
+                        "guid": -2
+                    }
+                ],
+                "db": {
+                    "guid": -200
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,48 @@
+version: '3.7'
+
+networks:
+  local-network:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.20.0.0/16
+
+
+services:
+  wordpress_db:
+    container_name: wordpress_db
+    image: mysql:8.0
+    ports:
+     - "3307:3306"
+    volumes:
+     - ./wordpress_db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: yourPassword
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: yourPassword
+    networks:
+      - local-network
+      
+  wordpress:
+    container_name: wordpress
+    depends_on:
+     - wordpress_db
+    image: wordpress:latest
+    ports:
+     - "80:80"
+    volumes:
+     - ./wordpress_db_l3html:/var/www/html
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3307
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: yourPassword
+    networks:
+      - local-network
+
+volumes:
+  # wordpress
+  wordpress_db_l3html:
+  wordpress_db_data:

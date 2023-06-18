@@ -1,0 +1,180 @@
+version: '3.7'
+
+networks:
+  local-network:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.20.0.0/16
+
+
+services:
+
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
+    container_name: es01
+    hostname: es01
+    extra_hosts:
+    - "logstash:0.0.0.0"
+    #   - "log-01.domain.com:192.168.57.66"
+    #   - "log-02.domain.com:192.168.57.67"
+    #   - "log-03.domain.com:192.168.57.68"
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es02
+      - cluster.initial_master_nodes=es01,es02
+      - "ES_JAVA_OPTS=-XX:UseAVX=2 -Xms1g -Xmx1g"
+      - bootstrap.memory_lock=true
+      # - cluster.initial_master_nodes=log-01,log-02,log-03
+      # - discovery.seed_hosts=log-01,log-02,log-03
+      - ELASTIC_PASSWORD=Aa123456
+      - network.host=0.0.0.0
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      # - xpack.security.enabled=true
+      # - xpack.security.http.ssl.enabled=true
+      # - xpack.security.http.ssl.key=certs/privkey.pem
+      # - xpack.security.http.ssl.certificate=certs/fullchain.pem
+      # - xpack.security.http.ssl.certificate_authorities=certs/fullchain.pem
+      # - xpack.security.http.ssl.verification_mode=certificate
+      # - xpack.security.transport.ssl.enabled=true
+      # - xpack.security.transport.ssl.key=certs/privkey.pem
+      # - xpack.security.transport.ssl.certificate=certs/fullchain.pem
+      # - xpack.security.transport.ssl.certificate_authorities=certs/fullchain.pem
+      # - xpack.security.transport.ssl.verification_mode=certificate
+      # - xpack.license.self_generated.type=basic
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+      # - elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      # - /app/elasticsearch/certs:/usr/share/elasticsearch/config/certs
+      # - /app/elasticsearch/data:/usr/share/elasticsearch/data
+      # - /app/elasticsearch/log:/usr/share/elasticsearch/log
+    ports:
+      - 9200:9200
+      - 9300:9300
+    ulimits:
+      memlock:
+        hard: -1
+        soft: -1
+    healthcheck:
+      interval: 20s
+      retries: 10
+      test: curl -s http://localhost:9200/_cluster/health | grep -vq '"status":"red"'
+    networks:
+      - local-network
+
+  es02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
+    container_name: es02
+    hostname: es02
+    environment:
+      - node.name=es02
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01
+      - cluster.initial_master_nodes=es01,es02
+      - "ES_JAVA_OPTS=-XX:UseAVX=2 -Xms1g -Xmx1g"
+      - bootstrap.memory_lock=true
+      # - cluster.initial_master_nodes=log-01,log-02,log-03
+      # - discovery.seed_hosts=log-01,log-02,log-03
+      - ELASTIC_PASSWORD=Aa123456
+      - network.host=0.0.0.0
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      # - xpack.security.enabled=true
+      # - xpack.security.http.ssl.enabled=true
+      # - xpack.security.http.ssl.key=certs/privkey.pem
+      # - xpack.security.http.ssl.certificate=certs/fullchain.pem
+      # - xpack.security.http.ssl.certificate_authorities=certs/fullchain.pem
+      # - xpack.security.http.ssl.verification_mode=certificate
+      # - xpack.security.transport.ssl.enabled=true
+      # - xpack.security.transport.ssl.key=certs/privkey.pem
+      # - xpack.security.transport.ssl.certificate=certs/fullchain.pem
+      # - xpack.security.transport.ssl.certificate_authorities=certs/fullchain.pem
+      # - xpack.security.transport.ssl.verification_mode=certificate
+      # - xpack.license.self_generated.type=basic
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata02:/usr/share/elasticsearch/data
+    ports:
+      - 9201:9200
+      - 9300:9300
+    networks:
+      - local-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.4.3
+    container_name: kibana
+    hostname: kibana
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://es01:9200
+      ELASTICSEARCH_HOSTS: http://es01:9200
+    depends_on:
+      es01:
+        condition: service_healthy
+    healthcheck:
+      interval: 10s
+      retries: 20
+      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:5601/api/status
+    networks:
+      - local-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.4.3
+    container_name: logstash
+    hostname: logstash
+    ports:
+      - "5000:5000"
+    # volumes:
+    #   - ./docker/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+    #   - ./docker/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - local-network
+    depends_on:
+      - es01
+
+  apm:
+    container_name: apm
+    image: docker.elastic.co/apm/apm-server:8.4.3
+    depends_on:
+      es01:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
+    cap_add: ["CHOWN", "DAC_OVERRIDE", "SETGID", "SETUID"]
+    cap_drop: ["ALL"]
+    ports:
+    - 8200:8200
+    command: >
+       apm-server -e
+         -E apm-server.rum.enabled=true
+         -E setup.kibana.host=kibana:5601
+         -E setup.template.settings.index.number_of_replicas=0
+         -E apm-server.kibana.enabled=true
+         -E apm-server.kibana.host=kibana:5601
+         -E output.elasticsearch.hosts=["es01:9200"]
+    healthcheck:
+      interval: 10s
+      retries: 12
+      test: curl --write-out 'HTTP %{http_code}' --fail --silent --output /dev/null http://localhost:8200/
+    networks:
+      - local-network
+
+
+
+
+volumes:
+  # elasticsearch
+  esdata01:
+    driver: local
+  esdata02:
+    driver: local
+#   esdata03:
+#     driver: local

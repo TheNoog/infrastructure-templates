@@ -1,0 +1,41 @@
+version: '3.7'
+
+networks:
+  local-network:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.20.0.0/16
+
+
+services:
+  spark:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: spark
+    hostname: spark
+    environment:
+      MASTER: spark://localhost:7077
+      SPARK_WORKER_PORT: 8881
+      SPARK_PUBLIC_DNS: localhost
+    expose:
+      - 7077
+      - 6066
+      - 4040
+      - 8889
+      - 8080
+    ports:
+      - 4040:4040
+      - 6066:6066  # Master rest port
+      - 7077:7077
+      - 8080:8080  # Master dashboard
+      - 8888:8888  # Jupyter Notebook
+      - 8889:8889  # Jupyter Notebook
+      - 8890:8890
+    command: bash -c "/opt/spark/sbin/start-master.sh"  # ./bin/spark-shell --master local[2]
+    # volumes:
+    #   - ../../code:/code
+    #   - ../../data:/data
+    networks:
+      - local-network

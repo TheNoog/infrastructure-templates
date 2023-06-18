@@ -1,0 +1,5 @@
+selectors:
+  - name: "standard_schedule"
+    definition: "tag:daily"
+  - name: "late_schedule"
+    definition: "tag:nightly"
